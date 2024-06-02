@@ -2,6 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { generateDbUri } from './utils/uri';
 import { connectToDb } from './db/connect';
+import { seedModel } from './utils/seed-model';
+import Word from './models/word';
+import wordSeed from './seeds/word';
 
 dotenv.config();
 const FALLBACK_PORT = 3001;
@@ -27,6 +30,9 @@ app.listen(APP_PORT, async () => {
 		await connectToDb(mongoDbUri);
 
 		console.debug('Connected to database!');
+		console.debug('Seeding database...');
+
+		await seedModel(wordSeed, Word);
 		console.debug(`Server is running on port ${APP_PORT}`);
 	} catch (err) {
 		console.error('There was an error connecting to the database');

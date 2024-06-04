@@ -5,11 +5,15 @@ import { connectToDb } from './db/connect';
 import { seedModel } from './utils/seed-model';
 import Word from './models/word';
 import wordSeed from './seeds/word';
+import router from './routes';
+import cors from 'cors';
 
 dotenv.config();
 const FALLBACK_PORT = 3001;
 
 const app = express();
+
+app.use(cors());
 
 const APP_PORT = process.env.APP_PORT || FALLBACK_PORT;
 
@@ -23,6 +27,8 @@ app.get('/up', (_, res) => {
 	res.send({ up: 'And running!' });
 });
 
+app.use(router);
+
 app.listen(APP_PORT, async () => {
 	const mongoDbUri = generateDbUri(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_APP_NAME);
 
@@ -30,9 +36,14 @@ app.listen(APP_PORT, async () => {
 		await connectToDb(mongoDbUri);
 
 		console.debug('Connected to database!');
-		console.debug('Seeding database...');
 
-		await seedModel(wordSeed, Word);
+		const numberOfWordsInDb = await Word.countDocuments().exec();
+
+		if (numberOfWordsInDb === 0) {
+			console.debug('Seeding database...');
+			await seedModel(wordSeed, Word);
+		}
+
 		console.debug(`Server is running on port ${APP_PORT}`);
 	} catch (err) {
 		console.error('There was an error connecting to the database');
